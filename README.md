@@ -1,5 +1,11 @@
 # English Words Pronunciation MP3 Audio Download
 
+## Introduction
+
+This is a simple Python script to download the MP3 audio for 24,000+ unique English words. They will take only 196.5 MB space on your disk.
+
+If the word you are looking for is not in the list, you should probably try some other sources. Ask me for help if you wanna make a crawler for the source you found but you don't know how.
+
 ## Getting Started
 
 * Download & install [Python 3](https://www.python.org/downloads/)
@@ -25,13 +31,13 @@ To specify how many threads you want to use in the downloader, just pass in a po
 $ python3 download_all_mp3.py 10
 ```
 
-This will start a downloader with 10 concurrent threads.
+This will start a downloader with 10 concurrent threads. Honestly it's a good choice to use 50 threads. You don't really need to change this unless you have a clear reason to.
 
 The downloaded mp3 audio files will be stored in the `download/` directory
 
 ## Use `data.json` in Other Applications
 
-The [data.json](data.json) file contains the URLs to the pronunciation mp3 audio files for over 24,000 English words.
+The [data.json](data.json) file contains the URLs to the pronunciation mp3 audio files for over 24,000 English words. It was constructed by my crawler (not included in this repository).
 
 A segment of the `data.json` file looks like this:
 
@@ -51,10 +57,10 @@ A segment of the `data.json` file looks like this:
 
 Apparently, each key is an English word and the value is the URL to the MP3 audio files.
 
-The `data.json` file is only 1.8MB so you can load it in your memory and let it serve as a lookup table. This should have covered most unique words out there in English. If the word you are looking for is not in the list, you should probably look for some other sources. Ask me for help if you wanna make a crawler and you don't know how.
+The `data.json` file is only 1.8 MB so you can load it in your memory and let it serve as a lookup table. 
 
 ## Acknowledgements
 
 The word list was downloaded from [Mieliestronk's](http://www.mieliestronk.com/wordlist.html). There are 56K+ words in the list but only 24K+ are recognized as unique words.
 
-Finally thanks to [vocabulary.com](http://vocabulary.com) for making their website so easily crawlable. Google no longer provides such feature though. 
+Finally thanks to [vocabulary.com](http://vocabulary.com) for making their website so easily crawlable.
