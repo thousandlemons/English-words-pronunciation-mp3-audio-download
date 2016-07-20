@@ -6,6 +6,8 @@ This is a simple Python script to download the MP3 audio for 24,000+ unique Engl
 
 If the word you are looking for is not in the list, you should probably try some other sources. Ask me for help if you wanna make a crawler for the source you found but you don't know how.
 
+Also please let me know if you find the MP3 URLs don't work anymore. The owners may change the URLs at any time, but it's OK, coz we can always make a new crawler to find all the audio files again.
+
 ## Getting Started
 
 * Download & install [Python 3](https://www.python.org/downloads/)
@@ -63,6 +65,6 @@ The `data.json` file is only 1.8 MB so you can load it in the memory and let it 
 
 ## Acknowledgements
 
-The word list was downloaded from [Mieliestronk's](http://www.mieliestronk.com/wordlist.html). There are 56K+ words in the list but only 24K+ are recognized as unique words.
+The list of English words was downloaded from [Mieliestronk's](http://www.mieliestronk.com/wordlist.html). There are 56K+ words in the list but only 24K+ have pronunciation audio.
 
 Finally thanks to [vocabulary.com](http://vocabulary.com) for making their website so easily crawlable.
