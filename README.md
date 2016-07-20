@@ -37,7 +37,9 @@ The downloaded mp3 audio files will be stored in the `download/` directory
 
 ## Use `data.json` in Other Applications
 
-The [data.json](data.json) file contains the URLs to the pronunciation mp3 audio files for over 24,000 English words. It was constructed by my crawler (not included in this repository).
+The [data.json](data.json) file contains the URLs to the pronunciation MP3 audio files for over 24,000 English words.
+
+I used my own crawler and it took quite a few hours to get all the data from the Web. Now you can use the data directly without writing your own crawler or wasting a few hours. The idea behind this is just like [rainbow tables](https://en.wikipedia.org/wiki/Rainbow_table). 
 
 A segment of the `data.json` file looks like this:
 
@@ -57,7 +59,7 @@ A segment of the `data.json` file looks like this:
 
 Apparently, each key is an English word and the value is the URL to the MP3 audio files.
 
-The `data.json` file is only 1.8 MB so you can load it in your memory and let it serve as a lookup table. 
+The `data.json` file is only 1.8 MB so you can load it in the memory and let it serve as a lookup table. 
 
 ## Acknowledgements
 
