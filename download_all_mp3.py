@@ -9,7 +9,7 @@ import requests
 
 MP3_FILENAME_EXTENSION = '.mp3'
 DIR_PATH = 'download/'
-TOTAL_THREADS = 50
+TOTAL_THREADS = 30
 DATA_FILE = 'data.json'
 
 
@@ -42,6 +42,9 @@ class DownloadWorker(Thread):
 
     def run(self):
         for word, url in self.pairs.items():
+            # if os.path.exists(os.path.join(self.dir_path, word + MP3_FILENAME_EXTENSION)):
+            #     self.statistics.decrease_total()
+            #     continue
             current = self.statistics.increase_current()
             print('(' + str(current) + '/' + str(self.statistics.total) + ') ' + word)
             download_mp3(word, url, self.dir_path)
