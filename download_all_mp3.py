@@ -15,7 +15,7 @@ DATA_FILE = 'ultimate.json'
 
 def download_mp3(word, url, dir_path):
     temp=requests.get(url).content
-    if "!DOCT" in str(temp[:6]): # <!DOCTYPE html>
+    if "html" in str(temp[:15]): # <!DOCTYPE html> or <html>
         raise Exception
     else :
         #print('ok')
