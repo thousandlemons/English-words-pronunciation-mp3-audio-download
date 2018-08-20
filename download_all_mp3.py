@@ -15,13 +15,12 @@ DATA_FILE = 'ultimate.json'
 
 def download_mp3(word, url, dir_path):
     temp=requests.get(url).content
-    if "html" in str(temp[:15]): # <!DOCTYPE html> or <html>
-        raise Exception
-    else :
-        #print('ok')
+    if ((temp[1]>=224) and (temp[0]==255)):#1111-1111-111 mp3 first bit sync
         filename = os.path.join(dir_path, word + MP3_FILENAME_EXTENSION)
         with open(filename, 'wb') as file:
            file.write(temp)
+    else :
+        raise Exception
 
 
 # split a dictionary into a list of dictionaries
