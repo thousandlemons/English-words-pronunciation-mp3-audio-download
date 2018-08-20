@@ -9,14 +9,18 @@ import requests
 
 MP3_FILENAME_EXTENSION = '.mp3'
 DIR_PATH = 'download/'
-TOTAL_THREADS = 30
-DATA_FILE = 'data.json'
+TOTAL_THREADS = 40
+DATA_FILE = 'ultimate.json'
 
 
 def download_mp3(word, url, dir_path):
-    filename = os.path.join(dir_path, word + MP3_FILENAME_EXTENSION)
-    with open(filename, 'wb') as file:
-        file.write(requests.get(url).content)
+    temp=requests.get(url).content
+    if ((temp[1]>=224) and (temp[0]==255)):#1111-1111-111 mp3 first bit sync
+        filename = os.path.join(dir_path, word + MP3_FILENAME_EXTENSION)
+        with open(filename, 'wb') as file:
+           file.write(temp)
+    else :
+        raise Exception
 
 
 # split a dictionary into a list of dictionaries
@@ -45,10 +49,25 @@ class DownloadWorker(Thread):
             # if os.path.exists(os.path.join(self.dir_path, word + MP3_FILENAME_EXTENSION)):
             #     self.statistics.decrease_total()
             #     continue
+			
             current = self.statistics.increase_current()
             print('(' + str(current) + '/' + str(self.statistics.total) + ') ' + word)
-            download_mp3(word, url, self.dir_path)
+            # download_mp3(word, url, self.dir_path)
 
+            i=0
+            f=1
+            while ((i<len(url)) ): #and (f==1)
+                try:
+                    f=0
+                    if i>0:
+                        download_mp3(word+"("+str(i)+")", url[i], self.dir_path)
+                    else :
+                        download_mp3(word, url[i], self.dir_path)
+                    i+=1
+                except:
+                    #print("Failed for word = "+word)
+                    f=1
+                    i+=1
 
 # provide a mutex on a shared integer representing current progress
 class Statistics:
