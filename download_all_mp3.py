@@ -47,8 +47,10 @@ class DownloadWorker(Thread):
             #     continue
             current = self.statistics.increase_current()
             print('(' + str(current) + '/' + str(self.statistics.total) + ') ' + word)
-            download_mp3(word, url, self.dir_path)
-
+            try:
+                download_mp3(word, url, self.dir_path)
+            except:
+                print("Failed")
 
 # provide a mutex on a shared integer representing current progress
 class Statistics:
