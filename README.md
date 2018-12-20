@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This is a simple Python script to download the MP3 pronunciation audio for 119,376 unique English words/terms. They will take around 2 GB on your disk in total.
+This is a simple Python script to download the MP3 pronunciation audio for 119,377 unique English words/terms. They will take around 2 GB on your disk in total.
 
 The MP3 sources were obtained from the following 7 online dictionaries:
 
@@ -27,29 +27,36 @@ I currently don't have the intention to share the source code of my crawler fram
 $ pip install -r requirements.txt
 ```
 
-## Download All MP3
+## Usage
 
 Just do it.
 
-```bash
+```
 $ python3 download_all_mp3.py
 ```
 
-This command will start a downloader with 30 threads by default.
+This command will start a downloader with 30 threads by default and put the result to download/.
 
-To specify how many threads you want to use in the downloader, just pass in a positive integer as parameter:
+It is also possible to specify:
+- How many threads are used
+- Which words exactly to download
+- Which sources for words are preferred
+- Where to put resulting mp3 files
 
-```bash
-$ python3 download_all_mp3.py 10
+Use help to see full usage.
+
+More advanced example:
 ```
+$ python3 download_all_mp3.py -t 1 -w "apple, banana" --prefer amazon -d my_words -v
+```
+This will download mp3 for apple and banana in 1 thread, preferring links with substring "amazon" (usually stands for Oxford Dictionaries).
+The result will be stored in my_words directory.
+Progress will be printed to stdout.
 
-This will start a downloader with 10 concurrent threads.
-
-The downloaded mp3 audio files will be stored in the `download/` directory
 
 ## Use `data.json` and `ultimate.json` in Other Applications
 
-The [data.json](data.json) and [ultimate.json](ultimate.json) file contains the URLs to the pronunciation MP3 audio files for 119,376 unique English words.
+The [data.json](data.json) and [ultimate.json](ultimate.json) file contains the URLs to the pronunciation MP3 audio files for 119,377 unique English words.
 
 My own crawler framework took tens of hours to get all the data from the Web. Now, you can use the data directly free of charge, instead of having to spend your time and effort to write the crawler and to crawl the Web. The idea behind this project is just like [rainbow tables](https://en.wikipedia.org/wiki/Rainbow_table). 
 
