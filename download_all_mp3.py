@@ -1,22 +1,29 @@
 import json
 import math
 import os
-import sys
 import threading
+import argparse
 from threading import Thread
 
 import requests
 
 MP3_FILENAME_EXTENSION = '.mp3'
-DIR_PATH = 'download/'
-TOTAL_THREADS = 30
-DATA_FILE = 'data.json'
+DATA_FILE = 'ultimate.json'
 
 
-def download_mp3(word, url, dir_path):
-    filename = os.path.join(dir_path, word + MP3_FILENAME_EXTENSION)
-    with open(filename, 'wb') as file:
-        file.write(requests.get(url).content)
+def download_mp3(word, urls, dir_path):
+    for url in urls:
+        filename = os.path.join(dir_path, word + MP3_FILENAME_EXTENSION)
+        try:
+            content = requests.get(url).content
+        except requests.RequestException:
+            continue
+        if not is_mp3(content):
+            continue
+        with open(filename, 'wb') as file:
+            file.write(content)
+            return
+    raise Exception('No valid link was found')
 
 
 # split a dictionary into a list of dictionaries
@@ -29,28 +36,51 @@ def split_dict_evenly(m_dict, segment_count):
     key_groups = [keys[segment_length * i: segment_length * (i + 1)] for i in range(segment_count)]
     return [{key: m_dict[key] for key in group} for group in key_groups]
 
+def is_mp3(binary_data):
+    return any(binary_data.startswith(bytearray.fromhex(header)) for header in ['fffb', '494433'])
+
+def sort_urls_by_preferences(urls, preferences):
+    if not preferences:
+        return urls
+
+    def index_of_url(url):
+        for (i, preference) in enumerate(preferences):
+            if preference in url:
+                return i
+        return len(preferences)
+
+    return sorted(urls, key=lambda url: index_of_url(url))
+
 
 # a single downloader thread
 class DownloadWorker(Thread):
     # 'pairs' is a dictionary
-    def __init__(self, pk, pairs, dir_path, statistics):
+    def __init__(self, pk, pairs, dir_path, statistics, silent, preferences):
         Thread.__init__(self)
         self.pk = pk
         self.pairs = pairs
         self.dir_path = dir_path
         self.statistics = statistics
+        self.silent = silent
+        self.preferences = preferences
 
     def run(self):
-        for word, url in self.pairs.items():
+        for word, urls in self.pairs.items():
             # if os.path.exists(os.path.join(self.dir_path, word + MP3_FILENAME_EXTENSION)):
             #     self.statistics.decrease_total()
             #     continue
-            current = self.statistics.increase_current()
-            print('(' + str(current) + '/' + str(self.statistics.total) + ') ' + word)
+            urls = sort_urls_by_preferences(urls, self.preferences)
             try:
-                download_mp3(word, url, self.dir_path)
-            except:
-                print("Failed")
+                download_mp3(word, urls, self.dir_path)
+                if not self.silent:
+                    print('Success on %s' % word)
+            except Exception as exc:
+                if not self.silent:
+                    print('Failed on %s: %s' % (word, str(exc)))
+            current = self.statistics.increase_current()
+            if not self.silent:
+                print('(' + str(current) + '/' + str(self.statistics.total) + ') ')
+
 
 # provide a mutex on a shared integer representing current progress
 class Statistics:
@@ -76,15 +106,30 @@ class Statistics:
         self.total_lock.release()
         return value
 
+def word_to_default_representation(word):
+    return word.strip().lower()
 
-def main(total_threads):
+
+def main(total_threads, dir_path, words, silent, preferences):
     # create directory
-    if not os.path.exists(DIR_PATH):
-        os.makedirs(DIR_PATH)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
 
     # load data into dictionary
     with open(DATA_FILE, 'r') as file:
         data = json.loads(file.read())
+
+    if words:
+        data = {
+            word: urls
+            for (word, urls) in data.items()
+            if word_to_default_representation(word) in words
+        }
+        if not silent:
+            for word in words:
+                if word not in data.keys():
+                    print('Could not find %s in dictionary' % word)
+
 
     # split dictionary into a list of dictionaries, each for a thread
     data_segments = split_dict_evenly(data, total_threads)
@@ -94,17 +139,39 @@ def main(total_threads):
 
     # start downloader threads
     for i in range(total_threads):
-        worker = DownloadWorker(i + 1, data_segments[i], DIR_PATH, statistics)
+        worker = DownloadWorker(i + 1, data_segments[i], dir_path, statistics, silent, preferences)
         worker.start()
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--threads', default=30, help='Number of threads for downloading.'
+                                                            ' By default 30.')
+    parser.add_argument('-d', '--directory', default='download', help='Directory to put downloaded words into.'
+                                                                       ' By default "download/".')
+    parser.add_argument('-w', '--words', default=None,
+                        help='Words to download, separated with commas.'
+                             ' Example "apple, banana, clown".'
+                             ' By default downloads all the words.')  # None stands for all the words
+    parser.add_argument('-s', '--silent', default=False, action='store_true',
+                        help='Keep silent.')
+    parser.add_argument('-p', '--prefer', default=None,
+                        help='Preferred website to download links from.'
+                             ' Every argument should be a substring of this website name.'
+                             ' Arguments should be separated with commas.'
+                             ' Example of usage "-p amazonaws" which stands for oxford dictionaries.')
+    return parser.parse_args()
+
+
+def parse_arguments_list(arguments_list):
+    return [word_to_default_representation(word) for word in arguments_list.split(',')] if arguments_list else None
+
 if __name__ == '__main__':
-    argument = TOTAL_THREADS
-
-    if len(sys.argv) == 2:
-        argument = int(sys.argv[1])
-
-    if argument > TOTAL_THREADS:
-        argument = TOTAL_THREADS
-    
-    main(argument)
+    arguments = parse_args()
+    main(
+        arguments.threads,
+        arguments.directory,
+        parse_arguments_list(arguments.words),
+        arguments.silent,
+        parse_arguments_list(arguments.prefer),
+    )
