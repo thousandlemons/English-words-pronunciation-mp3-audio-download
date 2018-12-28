@@ -16,9 +16,9 @@ def download_mp3(word, urls, dir_path):
         filename = os.path.join(dir_path, word + MP3_FILENAME_EXTENSION)
         try:
             content = requests.get(url).content
-            if is_not_mp3(content):
-                continue
-        except Exception:
+        except requests.RequestException:
+            continue
+        if not is_mp3(content):
             continue
         with open(filename, 'wb') as file:
             file.write(content)
@@ -36,11 +36,8 @@ def split_dict_evenly(m_dict, segment_count):
     key_groups = [keys[segment_length * i: segment_length * (i + 1)] for i in range(segment_count)]
     return [{key: m_dict[key] for key in group} for group in key_groups]
 
-def is_not_mp3(binary_data):  # TODO: add more stable checking
-    return (b'doctype' in binary_data or
-            b'DOCTYPE' in binary_data or
-            b'div' in binary_data or
-            b'xml' in binary_data)
+def is_mp3(binary_data):
+    return any(binary_data.startswith(bytearray.fromhex(header)) for header in ['fffb', '494433'])
 
 def sort_urls_by_preferences(urls, preferences):
     if not preferences:
@@ -58,13 +55,13 @@ def sort_urls_by_preferences(urls, preferences):
 # a single downloader thread
 class DownloadWorker(Thread):
     # 'pairs' is a dictionary
-    def __init__(self, pk, pairs, dir_path, statistics, verbose, preferences):
+    def __init__(self, pk, pairs, dir_path, statistics, silent, preferences):
         Thread.__init__(self)
         self.pk = pk
         self.pairs = pairs
         self.dir_path = dir_path
         self.statistics = statistics
-        self.verbose = verbose
+        self.silent = silent
         self.preferences = preferences
 
     def run(self):
@@ -73,16 +70,16 @@ class DownloadWorker(Thread):
             #     self.statistics.decrease_total()
             #     continue
             urls = sort_urls_by_preferences(urls, self.preferences)
-            current = self.statistics.increase_current()
-            if self.verbose:
-                print('(' + str(current) + '/' + str(self.statistics.total) + ') ')
             try:
                 download_mp3(word, urls, self.dir_path)
-                if self.verbose:
+                if not self.silent:
                     print('Success on %s' % word)
             except Exception as exc:
-                if self.verbose:
+                if not self.silent:
                     print('Failed on %s: %s' % (word, str(exc)))
+            current = self.statistics.increase_current()
+            if not self.silent:
+                print('(' + str(current) + '/' + str(self.statistics.total) + ') ')
 
 
 # provide a mutex on a shared integer representing current progress
@@ -113,7 +110,7 @@ def word_to_default_representation(word):
     return word.strip().lower()
 
 
-def main(total_threads, dir_path, words, verbose, preferences):
+def main(total_threads, dir_path, words, silent, preferences):
     # create directory
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
@@ -128,7 +125,7 @@ def main(total_threads, dir_path, words, verbose, preferences):
             for (word, urls) in data.items()
             if word_to_default_representation(word) in words
         }
-        if verbose:
+        if not silent:
             for word in words:
                 if word not in data.keys():
                     print('Could not find %s in dictionary' % word)
@@ -142,7 +139,7 @@ def main(total_threads, dir_path, words, verbose, preferences):
 
     # start downloader threads
     for i in range(total_threads):
-        worker = DownloadWorker(i + 1, data_segments[i], dir_path, statistics, verbose, preferences)
+        worker = DownloadWorker(i + 1, data_segments[i], dir_path, statistics, silent, preferences)
         worker.start()
 
 
@@ -156,8 +153,8 @@ def parse_args():
                         help='Words to download, separated with commas.'
                              ' Example "apple, banana, clown".'
                              ' By default downloads all the words.')  # None stands for all the words
-    parser.add_argument('-v', '--verbose', default=False, action='store_true',
-                        help='Notify about progress.')
+    parser.add_argument('-s', '--silent', default=False, action='store_true',
+                        help='Keep silent.')
     parser.add_argument('-p', '--prefer', default=None,
                         help='Preferred website to download links from.'
                              ' Every argument should be a substring of this website name.'
@@ -175,6 +172,6 @@ if __name__ == '__main__':
         arguments.threads,
         arguments.directory,
         parse_arguments_list(arguments.words),
-        arguments.verbose,
+        arguments.silent,
         parse_arguments_list(arguments.prefer),
     )

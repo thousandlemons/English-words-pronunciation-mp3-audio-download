@@ -47,11 +47,10 @@ Use help to see full usage.
 
 More advanced example:
 ```
-$ python3 download_all_mp3.py -t 1 -w "apple, banana" --prefer amazon -d my_words -v
+$ python3 download_all_mp3.py -t 1 -w "apple, banana" --prefer amazon -d my_words
 ```
 This will download mp3 for apple and banana in 1 thread, preferring links with substring "amazon" (usually stands for Oxford Dictionaries).
 The result will be stored in my_words directory.
-Progress will be printed to stdout.
 
 
 ## Use `data.json` and `ultimate.json` in Other Applications
